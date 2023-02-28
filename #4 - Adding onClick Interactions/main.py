@@ -32,19 +32,11 @@ def find_popup_slice(html):
 
     return starting_index, ending_index
 
-def find_map_variable_name(html):
-    pattern = "var map_"
+def find_variable_name(html, name_start):
+    variable_pattern = "var "
+    pattern = variable_pattern + name_start
 
-    starting_index = html.find(pattern) + 4
-    tmp_html = html[starting_index:]
-    ending_index = tmp_html.find(" =") + starting_index
-
-    return html[starting_index:ending_index]
-
-def find_popup_variable_name(html):
-    pattern = "var lat_lng"
-
-    starting_index = html.find(pattern) + 4
+    starting_index = html.find(pattern) + len(variable_pattern)
     tmp_html = html[starting_index:]
     ending_index = tmp_html.find(" =") + starting_index
 
@@ -54,17 +46,22 @@ def custom_code(popup_variable_name, map_variable_name):
     return '''
             // custom code
             function latLngPop(e) {
-                %s
-                    .setLatLng(e.latlng)
-                    .setContent("Latitude: " + e.latlng.lat.toFixed(4) +
-                                "<br>Longitude: " + e.latlng.lng.toFixed(4))
-                    .openOn(%s);
+                //%s
+                //    .setLatLng(e.latlng)
+                //    .setContent("Latitude: " + e.latlng.lat.toFixed(4) +
+                //                "<br>Longitude: " + e.latlng.lng.toFixed(4))
+                //    .openOn(%s);
 
-                console.log("Latitude: " + e.latlng.lat.toFixed(4));
-                console.log("Longitude: " + e.latlng.lng.toFixed(4));
+                //console.log("Latitude: " + e.latlng.lat.toFixed(4));
+                //console.log("Longitude: " + e.latlng.lng.toFixed(4));
+
+                L.marker(
+                    [e.latlng.lat, e.latlng.lng],
+                    {}
+                ).addTo(%s);
             }
             // end custom code
-    ''' % (popup_variable_name, map_variable_name)
+    ''' % (popup_variable_name, map_variable_name, map_variable_name)
 
 if __name__ == "__main__":
     # create variables
@@ -86,8 +83,8 @@ if __name__ == "__main__":
         html = mapfile.read()
 
     # find variable names
-    map_variable_name = find_map_variable_name(html)
-    popup_variable_name = find_popup_variable_name(html)
+    map_variable_name = find_variable_name(html, "map_")
+    popup_variable_name = find_variable_name(html, "lat_lng_popup_")
 
     # determine popup function indicies
     pstart, pend = find_popup_slice(html)
